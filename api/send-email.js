@@ -17,7 +17,7 @@ module.exports = async (req, res) => {
     const pdfBuffer = Buffer.from(pdfBase64, 'base64');
 
     await resend.emails.send({
-      // Para cuentas nuevas de Resend suele funcionar mejor usar onboarding@resend.dev
+      // Para cuentas nuevas, Resend recomienda usar onboarding@resend.dev
       from: 'AREA 51 <onboarding@resend.dev>',
       to: 'area51.balcarce@gmail.com',
       subject: `Declaración de cliente - ${nombre || 'Sin nombre'}`,
