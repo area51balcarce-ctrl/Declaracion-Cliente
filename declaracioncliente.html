@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Declaración Seguro del Hogar - AREA 51</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+    input.campo-texto {
+      border: none;
+      border-bottom: 1px solid #000;
+      padding: 2px 4px;
+      min-width: 200px;
+      font-family: inherit;
+      font-size: inherit;
+      outline: none;
+    }
+    #signature-pad {
+      border: 2px solid #000;
+      width: 100%;
+      height: 200px;
+      border-radius: 6px;
+      background: #fff;
+      touch-action: none;
+      margin-top: 8px;
+    }
+    button {
+      margin-top: 10px;
+      padding: 10px;
+    }
+    @media print {
+      button {
+        display: none;
+      }
+    }
+  </style>
+</head>
+<body id="contenido">
+
+  <p>
+    Yo, 
+    <input class="campo-texto" id="nombre" type="text" placeholder="Nombre completo del cliente">
+    , DNI 
+    <input class="campo-texto" id="dni" type="text" placeholder="DNI">
+    ,<br>
+    declaro que me he comunicado previamente con mi Seguro del Hogar 
+    <input class="campo-texto" id="seguro" type="text" placeholder="Nombre del Seguro del Hogar">
+    <br>
+    para informar el siniestro ocurrido en mi consola/equipo y que dicho seguro se encuentra en conocimiento 
+    de la situación.
+  </p>
+
+  <p>
+    Asimismo, dejo constancia de que autorizo expresamente al técnico y responsable de AREA 51 a realizar 
+    el diagnóstico, informe técnico y toda evaluación necesaria sobre el equipo mencionado, siendo este 
+    avalado tanto por mí como por el Seguro del Hogar que cubre el siniestro.
+  </p>
+
+  <p>
+    Con mi firma certifico que toda la información brindada es real y verídica, y que acepto que el 
+    informe elaborado por AREA 51 sea presentado ante la aseguradora como documentación válida del hecho.
+  </p>
+
+  <br>
+
+  <p><strong>Firma del Cliente (firmar con el dedo):</strong></p>
+  <canvas id="signature-pad"></canvas>
+  <button type="button" onclick="limpiarFirma()">Borrar firma</button>
+
+  <p>
+    <strong>Fecha:</strong> <span id="fecha-automatica"></span>
+  </p>
+
+  <button onclick="descargarPDF()">Descargar PDF</button>
+
+<!-- Librería para PDF -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.2/html2pdf.bundle.min.js"></script>
+
+<script>
+  // Fecha automática
+  const spanFecha = document.getElementById("fecha-automatica");
+  const hoy = new Date();
+  const opcionesFecha = { year: 'numeric', month: '2-digit', day: '2-digit' };
+  spanFecha.textContent = hoy.toLocaleDateString('es-AR', opcionesFecha);
+
+  // Firma digital
+  const canvas = document.getElementById("signature-pad");
+  const ctx = canvas.getContext("2d");
+  let dibujando = false;
+
+  function getPos(e) {
+    const rect = canvas.getBoundingClientRect();
+    if (e.touches && e.touches.length > 0) {
+      return {
+        x: e.touches[0].clientX - rect.left,
+        y: e.touches[0].clientY - rect.top
+      };
+    }
+    return { x: e.offsetX, y: e.offsetY };
+  }
+
+  canvas.addEventListener("mousedown", e => {
+    dibujando = true;
+    const p = getPos(e);
+    ctx.beginPath();
+    ctx.moveTo(p.x, p.y);
+  });
+
+  canvas.addEventListener("mousemove", e => {
+    if (!dibujando) return;
+    const p = getPos(e);
+    ctx.lineTo(p.x, p.y);
+    ctx.stroke();
+  });
+
+  canvas.addEventListener("mouseup", () => dibujando = false);
+  canvas.addEventListener("mouseleave", () => dibujando = false);
+
+  canvas.addEventListener("touchstart", e => {
+    e.preventDefault();
+    dibujando = true;
+    const p = getPos(e);
+    ctx.beginPath();
+    ctx.moveTo(p.x, p.y);
+  });
+
+  canvas.addEventListener("touchmove", e => {
+    e.preventDefault();
+    if (!dibujando) return;
+    const p = getPos(e);
+    ctx.lineTo(p.x, p.y);
+    ctx.stroke();
+  });
+
+  canvas.addEventListener("touchend", () => dibujando = false);
+
+  function limpiarFirma() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+  }
+
+  // Función para PDF
+  function descargarPDF() {
+    const firmaData = canvas.toDataURL("image/png");
+
+    // Clonar contenido para incrustar firma
+    const contenido = document.getElementById("contenido").cloneNode(true);
+
+    const nuevoCanvas = document.createElement("img");
+    nuevoCanvas.src = firmaData;
+    nuevoCanvas.style.maxWidth = "300px";
+    nuevoCanvas.style.border = "1px solid #000";
+    nuevoCanvas.style.marginTop = "10px";
+
+    const canvasOriginal = contenido.querySelector("#signature-pad");
+    canvasOriginal.replaceWith(nuevoCanvas);
+
+    const opciones = {
+      margin: 10,
+      filename: `Declaracion_Seguro_AREA51_${hoy.getFullYear()}-${hoy.getMonth()+1}-${hoy.getDate()}.pdf`,
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: { scale: 2 },
+      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    };
+
+    html2pdf().set(opciones).from(contenido).save();
+  }
+</script>
+
+</body>
+</html>
