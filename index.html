@@ -2,6 +2,7 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Declaración Seguro del Hogar - AREA 51</title>
   <style>
     body {
@@ -22,7 +23,30 @@
       font-family: inherit;
       font-size: 16px;          /* mismo tamaño que el texto */
       outline: none;
+      color: #000;
     }
+    /* Forzar tamaño y color del placeholder en todos los navegadores */
+    input.campo-texto::placeholder {
+      font-size: 16px;
+      color: #555;
+      opacity: 1;
+    }
+    input.campo-texto::-webkit-input-placeholder {
+      font-size: 16px;
+      color: #555;
+      opacity: 1;
+    }
+    input.campo-texto:-ms-input-placeholder {
+      font-size: 16px;
+      color: #555;
+      opacity: 1;
+    }
+    input.campo-texto::-ms-input-placeholder {
+      font-size: 16px;
+      color: #555;
+      opacity: 1;
+    }
+
     #signature-pad {
       border: 2px solid #000;
       width: 100%;
@@ -35,7 +59,7 @@
     button {
       margin-top: 10px;
       padding: 10px;
-      font-size: 14px;          /* un poco más chico para que no grite tanto */
+      font-size: 14px;
     }
     @media print {
       button {
@@ -177,5 +201,9 @@
 
 </body>
 </html>
+
+</body>
+</html>
+
 
 
