@@ -8,11 +8,11 @@
     body {
       font-family: Arial, sans-serif;
       margin: 20px;
-      font-size: 16px;          /* tamaño general */
+      font-size: 16px;
       line-height: 1.5;
     }
     p {
-      font-size: 16px;          /* todos los párrafos igual */
+      font-size: 16px;
       margin-bottom: 12px;
     }
     input.campo-texto {
@@ -21,32 +21,19 @@
       padding: 2px 4px;
       min-width: 200px;
       font-family: inherit;
-      font-size: 16px;          /* mismo tamaño que el texto */
+      font-size: 16px;
       outline: none;
       color: #000;
     }
-    /* Forzar tamaño y color del placeholder en todos los navegadores */
-    input.campo-texto::placeholder {
-      font-size: 16px;
-      color: #555;
-      opacity: 1;
-    }
-    input.campo-texto::-webkit-input-placeholder {
-      font-size: 16px;
-      color: #555;
-      opacity: 1;
-    }
-    input.campo-texto:-ms-input-placeholder {
-      font-size: 16px;
-      color: #555;
-      opacity: 1;
-    }
+    /* Placeholder mismo tamaño/color en todos los navegadores */
+    input.campo-texto::placeholder,
+    input.campo-texto::-webkit-input-placeholder,
+    input.campo-texto:-ms-input-placeholder,
     input.campo-texto::-ms-input-placeholder {
       font-size: 16px;
       color: #555;
       opacity: 1;
     }
-
     #signature-pad {
       border: 2px solid #000;
       width: 100%;
@@ -116,6 +103,10 @@
   const opcionesFecha = { year: 'numeric', month: '2-digit', day: '2-digit' };
   spanFecha.textContent = hoy.toLocaleDateString('es-AR', opcionesFecha);
 
+  const nombreInput = document.getElementById("nombre");
+  const dniInput    = document.getElementById("dni");
+  const seguroInput = document.getElementById("seguro");
+
   // Firma digital
   const canvas = document.getElementById("signature-pad");
   const ctx = canvas.getContext("2d");
@@ -171,7 +162,18 @@
     ctx.clearRect(0, 0, canvas.width, canvas.height);
   }
 
-  // Función para PDF
+  async function enviarPDFServidor(payload) {
+    const resp = await fetch('/api/send-email', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    if (!resp.ok) {
+      throw new Error('Error al enviar el mail');
+    }
+  }
+
+  // Función para PDF + envío por mail
   function descargarPDF() {
     const firmaData = canvas.toDataURL("image/png");
 
@@ -195,15 +197,28 @@
       jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
     };
 
-    html2pdf().set(opciones).from(contenido).save();
+    html2pdf().set(opciones).from(contenido).toPdf().get('pdf').then(async (pdf) => {
+      const pdfDataUri = pdf.output('datauristring');
+      const pdfBase64  = pdfDataUri.split(',')[1];
+
+      try {
+        await enviarPDFServidor({
+          pdfBase64,
+          nombre: nombreInput.value,
+          dni: dniInput.value,
+          seguro: seguroInput.value,
+          fecha: spanFecha.textContent,
+        });
+        // opcional: show ok
+        // alert('PDF enviado a tu email correctamente.');
+      } catch (err) {
+        console.error(err);
+        // opcional: avisar error
+        // alert('Se descargó el PDF, pero hubo un problema enviando el mail.');
+      }
+    }).save(); // descarga el PDF en el dispositivo del cliente
   }
 </script>
 
 </body>
 </html>
-
-</body>
-</html>
-
-
-
